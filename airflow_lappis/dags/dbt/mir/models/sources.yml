@@ -26,6 +26,7 @@ sources:
     schema: senado_federal
     tables:
       - name: senadores
+      - name: legislaturas
 
   - name: transfere_gov
     schema: transfere_gov

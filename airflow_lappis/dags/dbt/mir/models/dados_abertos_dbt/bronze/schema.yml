@@ -194,3 +194,61 @@ models:
         nome_tabela: 'senadores.senadores'
         nome_coluna: 'dt_ingest'
         tipo_esperado: 'timestamp with time zone'
+
+  - name: legislaturas
+    description: >
+      Tabela com informações de legislaturas da Câmara dos Deputados, incluindo
+      identificador, período de vigência e data de eleição.
+      Esta tabela representa a camada bronze do pipeline, com padronização de tipos
+      e ajuste de fuso horário na data de ingestão.
+      Os dados são provenientes da fonte camara_deputados.legislaturas (camada raw) e
+      passam por conversão explícita de tipos para garantir consistência e rastreabilidade.
+    meta:
+      tags:
+        - bronze
+    columns:
+      - name: id
+        description: >
+          Identificador único da legislatura na API da Câmara dos Deputados.
+
+      - name: data_inicio
+        description: >
+          Data de início da legislatura.
+
+      - name: data_fim
+        description: >
+          Data de término da legislatura.
+
+      - name: data_eleicao
+        description: >
+          Data da eleição associada à legislatura.
+
+      - name: dt_ingest
+        description: >
+          Data e hora (UTC-3 Brasília) em que os dados foram ingeridos da fonte original para a camada raw.
+
+    tests:
+    - verificacao_tipagem:
+        nome_tabela: 'legislaturas.legislaturas'
+        nome_coluna: 'id'
+        tipo_esperado: 'integer'
+
+    - verificacao_tipagem:
+        nome_tabela: 'legislaturas.legislaturas'
+        nome_coluna: 'data_inicio'
+        tipo_esperado: 'date'
+
+    - verificacao_tipagem:
+        nome_tabela: 'legislaturas.legislaturas'
+        nome_coluna: 'data_fim'
+        tipo_esperado: 'date'
+
+    - verificacao_tipagem:
+        nome_tabela: 'legislaturas.legislaturas'
+        nome_coluna: 'data_eleicao'
+        tipo_esperado: 'date'
+
+    - verificacao_tipagem:
+        nome_tabela: 'legislaturas.legislaturas'
+        nome_coluna: 'dt_ingest'
+        tipo_esperado: 'timestamp with time zone'
