@@ -101,13 +101,16 @@ class ClientPostgresDB:
             )
             return
 
-        self.create_table_if_not_exists(
-            data[0], table_name, primary_key=primary_key, schema=schema, conn=conn
-        )
-
         flattened_data = self._flatten_data(data)
         columns = list(flattened_data[0].keys())
-        values = [tuple(item.values()) for item in flattened_data]
+        column_probe = {col: None for col in columns}
+
+        self.create_table_if_not_exists(
+            column_probe, table_name, primary_key=primary_key, schema=schema, conn=conn
+        )
+        self.alter_table(column_probe, table_name, schema=schema, conn=conn)
+
+        values = [tuple(item.get(col) for col in columns) for item in flattened_data]
 
         sql = f"INSERT INTO {schema}.{table_name} ({', '.join(columns)}) VALUES %s"
 
@@ -122,6 +125,20 @@ class ClientPostgresDB:
                     psycopg2.extras.execute_values(cursor, sql, values)
                     logging.info(
                         f"[cliente_postgres.py] Inserted data into {schema}.{table_name}"
+                    )
+                except psycopg2.errors.UndefinedColumn as err:
+                    logging.warning(
+                        f"[cliente_postgres.py] Missing column detected in {schema}.{table_name}: "
+                        f"{err}. Tentando alterar tabela e reinserir."
+                    )
+                    connection.rollback()
+                    column_probe = {col: None for col in columns}
+                    self.alter_table(
+                        column_probe, table_name, schema=schema, conn=connection
+                    )
+                    psycopg2.extras.execute_values(cursor, sql, values)
+                    logging.info(
+                        f"[cliente_postgres.py] Inserted data into {schema}.{table_name} after alter"
                     )
                 except psycopg2.Error as err:
                     logging.error(
@@ -201,13 +218,17 @@ class ClientPostgresDB:
                 return cursor.fetchall()
 
     def alter_table(
-        self, data: Dict[str, Any], table_name: str, schema: str = "raw"
+        self,
+        data: Dict[str, Any],
+        table_name: str,
+        schema: str = "raw",
+        conn=None,
     ) -> None:
         flattened_data = self._flatten_data([data])[0]
         columns = list(flattened_data.keys())
 
-        with psycopg2.connect(self.conn_str) as conn:
-            with conn.cursor() as cursor:
+        def _execute(connection):
+            with connection.cursor() as cursor:
                 cursor.execute(
                     f"""
                     SELECT column_name
@@ -236,10 +257,16 @@ class ClientPostgresDB:
                                 f"to {schema}.{table_name}. Error: {str(e)}"
                             )
 
-                conn.commit()
-                logging.info(
-                    f"[cliente_postgres.py] Table {schema}.{table_name} altered successfully"
-                )
+        if conn is not None:
+            _execute(conn)
+        else:
+            with psycopg2.connect(self.conn_str) as new_conn:
+                _execute(new_conn)
+                new_conn.commit()
+
+        logging.info(
+            f"[cliente_postgres.py] Table {schema}.{table_name} altered successfully"
+        )
 
     def get_nota_credito(self) -> List[Tuple[Any, ...]]:
         query = (
@@ -354,7 +381,9 @@ class ClientPostgresDB:
         with psycopg2.connect(self.conn_str) as conn:
             with conn.cursor() as cursor:
                 cursor.execute(query)
-                return [{"nome_cor": row[0], "valor": row[1]} for row in cursor.fetchall()]
+                return [
+                    {"nome_cor": row[0], "valor": row[1]} for row in cursor.fetchall()
+                ]
 
     def get_dashboard_situacao_funcional(self) -> List[Dict[str, Any]]:
         query = """

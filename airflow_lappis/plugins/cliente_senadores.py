@@ -103,13 +103,23 @@ class ClienteSenadores(ClienteBase):
 
         if status == http.HTTPStatus.OK and isinstance(data, dict):
             try:
-                root = data.get("ListaFiliacoesParlamentar", {})
+                root = data.get("FiliacaoParlamentar", data.get("ListaFiliacoesParlamentar", {}))
+                parlamentar = root.get("Parlamentar")
+                if isinstance(parlamentar, dict):
+                    root = parlamentar
+
                 filiacao = root.get("Filiacoes", {}).get("Filiacao", [])
 
                 if isinstance(filiacao, dict):
                     return [filiacao]
                 if isinstance(filiacao, list):
-                    return filiacao
+                    if filiacao:
+                        return filiacao
+                    logging.warning(
+                        "[cliente_senadores.py] Filiacoes vazias para "
+                        f"senador_id={senador_id}"
+                    )
+                    return None
             except Exception as e:
                 logging.error(
                     "[cliente_senadores.py] Erro ao parsear filiacoes do senador "
