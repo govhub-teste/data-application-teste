@@ -11,7 +11,7 @@ with
     ),
     planos_acao as (
         select *
-        from {{ source("transfere_gov", "planos_acao") }}
+        from {{ ref("planos_acao_ted") }}
     )
 
 select

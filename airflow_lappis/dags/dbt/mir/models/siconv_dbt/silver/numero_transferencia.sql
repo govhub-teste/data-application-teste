@@ -44,7 +44,7 @@ with
                     )::integer
                 else null 
             end as numero_transferencia
-        from {{ source("emendas", "emendas_partidos") }}
+        from {{ ref("emendas_partidos") }}
     )
 
 select *
