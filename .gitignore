@@ -38,7 +38,6 @@ build/
 
 # DBT
 target/
-dbt_packages/
 logs/
 
 # Jupyter

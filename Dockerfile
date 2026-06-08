@@ -50,10 +50,12 @@ RUN mkdir -p dags/dbt
 # Certifique-se de que esses arquivos existem na sua máquina local neste mesmo caminho
 COPY airflow_lappis/dags/dbt/dbt_project.yml dags/dbt/
 COPY airflow_lappis/dags/dbt/packages.yml dags/dbt/
+COPY airflow_lappis/dags/dbt/configure_dbt_package_remotes.py dags/dbt/
 
 # 3. Entra na pasta do DBT e baixa os pacotes dos clientes (IPEA e MIR) do GitHub
 WORKDIR ${AIRFLOW_HOME}/dags/dbt
 RUN dbt deps
+RUN python configure_dbt_package_remotes.py
 
 # 4. Retorna o WORKDIR para a raiz do Airflow para manter o padrão da imagem
 WORKDIR ${AIRFLOW_HOME}
