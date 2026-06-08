@@ -39,6 +39,8 @@ build/
 # DBT
 target/
 logs/
+airflow_lappis/dags/dbt/dbt_packages/
+airflow_lappis/dags/dbt/venv/
 
 # Jupyter
 **/*.ipynb_checkpoints/

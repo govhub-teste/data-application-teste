@@ -1,7 +1,7 @@
 # Base configuration for Airflow services
 x-airflow-common: &airflow-common
   build: .
-  user: "${AIRFLOW_UID:-50000}:0"
+  user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-0}"
   env_file:
     - .env
   volumes:

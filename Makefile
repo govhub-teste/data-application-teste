@@ -8,6 +8,7 @@ AIRFLOW_LOCAL_DB_NAME ?= postgres
 AIRFLOW_LOCAL_DB_USER ?= postgres
 AIRFLOW_LOCAL_DB_PASSWORD ?= postgres
 AIRFLOW_LOCAL_DB_PORT ?= 5432
+DBT_CONTAINER_DIR ?= /opt/airflow/dags/dbt
 
 setup:
 	@if ! command -v poetry >/dev/null 2>&1; then \
@@ -63,6 +64,10 @@ dev:
 	@docker compose exec -T $(AIRFLOW_SERVICE) airflow variables set dynamic_schedules '{"empenhos_tesouro_ingest_dag":{"type":"cron","value":"0 13 * * 1-6"},"nc_tesouro_ingest_dag":{"type":"cron","value":"0 13 * * 1-6"},"pf_tesouro_ingest_dag":{"type":"cron","value":"0 13 * * 1-6"},"visao_orcamentaria_ingest":{"type":"cron","value":"0 13 * * 1-6"}}'
 	@docker compose exec -T $(AIRFLOW_SERVICE) sh -c "printf '%s\n' '{\"postgres_default\":{\"conn_type\":\"postgres\",\"host\":\"$(AIRFLOW_LOCAL_DB_HOST)\",\"schema\":\"$(AIRFLOW_LOCAL_DB_NAME)\",\"login\":\"$(AIRFLOW_LOCAL_DB_USER)\",\"password\":\"$(AIRFLOW_LOCAL_DB_PASSWORD)\",\"port\":$(AIRFLOW_LOCAL_DB_PORT)}}' > /tmp/airflow-connections.json && airflow connections import --overwrite /tmp/airflow-connections.json && rm -f /tmp/airflow-connections.json"
 	@echo "Ambiente local do Airflow configurado com sucesso."
+
+dbt-deps:
+	@docker compose ps --status running $(AIRFLOW_SERVICE) >/dev/null 2>&1 || (echo "Serviço '$(AIRFLOW_SERVICE)' não está em execução. Rode: docker compose up -d" && exit 1)
+	@docker compose exec -T $(AIRFLOW_SERVICE) sh -c 'cd $(DBT_CONTAINER_DIR) && dbt deps --log-path /tmp/dbt-logs'
 
 dev-check:
 	@docker compose ps --status running $(AIRFLOW_SERVICE) >/dev/null 2>&1 || (echo "Serviço '$(AIRFLOW_SERVICE)' não está em execução. Rode: docker compose up -d" && exit 1)
