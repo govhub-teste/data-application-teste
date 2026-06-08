@@ -1,0 +1,6 @@
+[submodule "airflow_lappis/dags/dbt/dbt_packages/mir"]
+	path = airflow_lappis/dags/dbt/dbt_packages/mir
+	url = https://github.com/govhub-teste/mir-dbt.git
+[submodule "airflow_lappis/dags/dbt/dbt_packages/ipea"]
+	path = airflow_lappis/dags/dbt/dbt_packages/ipea
+	url = https://github.com/govhub-teste/ipea-dbt.git
