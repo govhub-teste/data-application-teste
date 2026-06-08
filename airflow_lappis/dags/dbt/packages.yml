@@ -1,0 +1,7 @@
+# packages.yml (Na raiz do repositório central)
+packages:
+  - git: "https://github.com/govhub-teste/ipea-dbt.git"
+    revision: main # ou a tag/branch que você desejar usar (ex: v1.0.0)
+
+  - git: "https://github.com/govhub-teste/mir-dbt.git"
+    revision: main

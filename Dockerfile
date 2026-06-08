@@ -38,3 +38,22 @@ WORKDIR ${AIRFLOW_HOME}
 # sempre será sincronizado via git sync ou via volumes localmente
 COPY requirements.txt .
 RUN pip install -r requirements.txt
+
+# ==============================================================================
+# CONFIGURAÇÃO DO DBT CENTRAL (POC MULTI-TENANT)
+# ==============================================================================
+
+# 1. Garante a criação da estrutura de pastas do DBT no container
+RUN mkdir -p dags/dbt
+
+# 2. Copia os arquivos de configuração do DBT para dentro do container
+# Certifique-se de que esses arquivos existem na sua máquina local neste mesmo caminho
+COPY airflow_lappis/dags/dbt/dbt_project.yml dags/dbt/
+COPY airflow_lappis/dags/dbt/packages.yml dags/dbt/
+
+# 3. Entra na pasta do DBT e baixa os pacotes dos clientes (IPEA e MIR) do GitHub
+WORKDIR ${AIRFLOW_HOME}/dags/dbt
+RUN dbt deps
+
+# 4. Retorna o WORKDIR para a raiz do Airflow para manter o padrão da imagem
+WORKDIR ${AIRFLOW_HOME}

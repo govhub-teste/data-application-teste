@@ -1,0 +1,40 @@
+name: 'govhub_central' # Um nome único para identificar o seu repositório unificado
+version: '1.0.0'
+config-version: 2
+
+# O perfil de conexão que o seu Airflow/Orquestrador central vai usar para rodar tudo
+profile: 'govhub_profile' 
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+  - "logs"
+
+# Configurações de execução e materialização dos modelos
+models:
+  # Se você tiver modelos que são 100% globais/centrais (que não pertencem a nenhum cliente especificamente),
+  # eles ficam na pasta local "models/" deste repositório e seguem a configuração abaixo:
+  govhub_central:
+    +database: analytics
+    +materialized: view
+
+  # AQUI ESTÁ O SEGREDO: Você pode configurar ou sobrescrever propriedades 
+  # dos pacotes dos clientes diretamente por aqui se quiser, usando o NAME do dbt_project deles:
+  ipea:
+    +database: analytics
+    # O repositório central reconhece a estrutura do pacote do cliente automaticamente,
+    # mas se você precisar forçar alguma configuração global (ex: mudar o banco de dados em prod), faria aqui.
+
+  mir:
+    +database: analytics
+
+on-run-start:
+  # Executa as UDFs globais antes de rodar os modelos
+  - '{{create_udfs()}}'
